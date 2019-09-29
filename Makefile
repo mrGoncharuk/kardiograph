@@ -23,7 +23,10 @@ CIMGUI_LIB = 	$(addprefix $(CIMGUI_DIR), $(CIMGUI_NAME))
 
 
 
-SRC_FILES =		main.c
+SRC_FILES =		main.c \
+				ft_init.c \
+				ft_mainloop.c \
+				ft_clean.c
 
 
 HEADERS = 		$(INC_DIR)kardiograph.h
