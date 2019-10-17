@@ -1,111 +1,134 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    Makefile                                           :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: mhonchar <mhonchar@student.42.fr>          +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2019/05/15 19:28:21 by mhonchar          #+#    #+#              #
-#    Updated: 2019/09/17 17:21:27 by mhonchar         ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
+#
+# Cross Platform Makefile
+# Compatible with MSYS2/MINGW, Ubuntu 14.04.1 and Mac OS X
+#
+# You will need SDL2 (http://www.libsdl.org):
+# Linux:
+#   apt-get install libsdl2-dev
+# Mac OS X:
+#   brew install sdl2
+# MSYS2:
+#   pacman -S mingw-w64-i686-SDL
+#
 
-NAME = KardioGraph
-CIMGUI_NAME = cimgui.so
-SRC_DIR = src/
+#CXX = g++
+CXX = clang++
+
+IMPL_DIR = imgui_impl/
+IMGUI_DIR = imgui/
 OBJ_DIR = obj/
-INC_DIR = includes/
-FRM_DIR = frameworks
-CIMGUI_DIR = cimgui/
-IMGUI_DIR = cimgui/imgui/
-IMPL_DIR = cimgui/impl
-CIMGUI_LIB = 	$(addprefix $(CIMGUI_DIR), $(CIMGUI_NAME))
+SRC_DIR = src/
+NAME = KardioGraph
+SRC = 	main.cpp \
+		GUI.cpp \
+		IMonitorDisplay.cpp \
+		Wave.cpp \
+		ECG.cpp
 
 
+SOURCES = $(addprefix $(SRC_DIR), $(SRC))
+SOURCES += $(IMPL_DIR)imgui_impl_sdl.cpp $(IMPL_DIR)imgui_impl_opengl3.cpp
+SOURCES += $(IMGUI_DIR)imgui.cpp $(IMGUI_DIR)imgui_demo.cpp $(IMGUI_DIR)imgui_draw.cpp $(IMGUI_DIR)imgui_widgets.cpp
+OBJS = $(addprefix $(OBJ_DIR), $(addsuffix .o, $(basename $(notdir $(SOURCES)))))
+UNAME_S := $(shell uname -s)
 
-SRC_FILES =		main.c \
-				ft_init.c \
-				ft_mainloop.c \
-				ft_clean.c
+CXXFLAGS = -I$(IMPL_DIR) -I$(IMGUI_DIR) -Iincludes/
+CXXFLAGS += -g -Wall -Werror -Wextra
+LIBS = -lncurses
 
+##---------------------------------------------------------------------
+## OPENGL LOADER
+##---------------------------------------------------------------------
 
-HEADERS = 		$(INC_DIR)kardiograph.h
+## Using OpenGL loader: gl3w [default]
+SOURCES += $(IMGUI_DIR)libs/gl3w/GL/gl3w.c
+CXXFLAGS += -I$(IMGUI_DIR)libs/gl3w
 
-OBJS_GUI = 	imgui_impl_sdl.o \
-			imgui_impl_opengl3.o
+## Using OpenGL loader: glew
+## (This assumes a system-wide installation)
+# CXXFLAGS += -lGLEW -DIMGUI_IMPL_OPENGL_LOADER_GLEW
 
-SRC = $(addprefix $(SRC_DIR), $(notdir $(SRC_FILES)))
-OBJ = 	$(addprefix $(OBJ_DIR), $(notdir $(SRC_FILES:.c=.o))) \
-		$(addprefix $(OBJ_DIR), $(OBJS_GUI))
+## Using OpenGL loader: glad
+# SOURCES += ../libs/glad/src/glad.c
+# CXXFLAGS += -I../libs/glad/include -DIMGUI_IMPL_OPENGL_LOADER_GLAD
 
-
-
-CC = gcc
-CFLAGS = -Wall 
-INC = 		-I $(INC_DIR) \
-			-I $(CIMGUI_DIR) \
-			-I $(IMPL_DIR)
-
-
-LIBS_LINK = -l SDL2 \
-			-l SDL2_image \
-			-lm \
-			-lglut -lGLU -lGL -lGLEW \
-			$(CIMGUI_LIB) \
-			-lstdc++
-			
-
-SDL_IMPL_CFLAGS = -I$(CIMGUI_DIR) -I$(IMGUI_DIR) -I$(IMPL_DIR) -DIMGUI_IMPL_API="extern \"C\""
-OPENGL3_IMPL_CFLAGS_GLEW = -I$(CIMGUI_DIR) -I$(IMGUI_DIR) -I$(IMPL_DIR) -DIMGUI_IMPL_API="extern \"C\"" -DIMGUI_IMPL_OPENGL_LOADER_GLEW
-
+##---------------------------------------------------------------------
+## OUTPUT COLORS
+##---------------------------------------------------------------------
 
 C_RED = \033[31m
 C_GREEN = \033[32m
 C_MAGENTA = \033[35m
 C_NONE = \033[0m
 
-all: $(NAME)
 
-$(NAME): $(CIMGUI_NAME) $(HEADERS) gui $(OBJ_DIR) $(OBJ)
-	@$(CC) $(CFLAGS) $(OBJ) $(LIBS_LINK) -o $(NAME)
+##---------------------------------------------------------------------
+## BUILD FLAGS PER PLATFORM
+##---------------------------------------------------------------------
+
+ifeq ($(UNAME_S), Linux) #LINUX
+	ECHO_MESSAGE = "Linux"
+	LIBS += -lGL -ldl `sdl2-config --libs`
+
+	CXXFLAGS += `sdl2-config --cflags`
+	CFLAGS = $(CXXFLAGS)
+endif
+
+ifeq ($(UNAME_S), Darwin) #APPLE
+	ECHO_MESSAGE = "Mac OS X"
+	LIBS += -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo `sdl2-config --libs`
+	LIBS += -L/usr/local/lib 
+
+	CXXFLAGS += `sdl2-config --cflags`
+	CXXFLAGS += -I/usr/local/include -I/opt/local/include
+	CFLAGS = $(CXXFLAGS)
+endif
+
+ifeq ($(findstring MINGW,$(UNAME_S)),MINGW)
+   ECHO_MESSAGE = "MinGW"
+   LIBS += -lgdi32 -lopengl32 -limm32 `pkg-config --static --libs sdl2`
+
+   CXXFLAGS += `pkg-config --cflags sdl2`
+   CFLAGS = $(CXXFLAGS)
+endif
+
+##---------------------------------------------------------------------
+## BUILD RULES
+##---------------------------------------------------------------------
+
+all: $(OBJ_DIR) $(NAME)
+	@echo Build complete for $(ECHO_MESSAGE)
+
+$(NAME): $(OBJS)
+	@$(CXX) -o $@ $^ $(CXXFLAGS) $(LIBS)
 	@printf "$(C_MAGENTA)$(NAME):$(C_NONE) %-25s$(C_GREEN)[done]$(C_NONE)\n" $@
 
 $(OBJ_DIR):
 	@mkdir obj
+
+$(OBJ_DIR)%.o: $(SRC_DIR)%.cpp
+	@$(CXX) $(CXXFLAGS) -c $< -o $@
 	@printf "$(C_MAGENTA)$(NAME):$(C_NONE) %-25s$(C_GREEN)[done]$(C_NONE)\n" $@
 
-$(OBJ_DIR)%.o: $(SRC_DIR)%.c $(HEADERS)
-	@$(CC) $(CFLAGS) -DIMGUI_IMPL_OPENGL_LOADER_GLEW -DIMGUI_IMPL_API="" -c $(INC) $< -o $@
+$(OBJ_DIR)%.o: $(IMPL_DIR)%.cpp
+	@$(CXX) $(CXXFLAGS) -c $< -o $@
 	@printf "$(C_MAGENTA)$(NAME):$(C_NONE) %-25s$(C_GREEN)[done]$(C_NONE)\n" $@
 
-$(CIMGUI_NAME):
-	@make -C $(CIMGUI_DIR)
-	@printf "$(C_MAGENTA)$(NAME):$(C_NONE) %-25s$(C_GREE)[done]$(C_NONE)\n" $@
+$(OBJ_DIR)%.o: $(IMGUI_DIR)%.cpp
+	@$(CXX) $(CXXFLAGS) -c $< -o $@
+	@printf "$(C_MAGENTA)$(NAME):$(C_NONE) %-25s$(C_GREEN)[done]$(C_NONE)\n" $@
 
-gui: cimgui imgui_impl_sdl.o imgui_impl_opengl3.o
 
-imgui_impl_sdl.o: $(IMPL_DIR)/imgui_impl_sdl.cpp $(IMPL_DIR)/imgui_impl_sdl.h
-	@g++ $(SDL_IMPL_CFLAGS) -c $< -o $(OBJ_DIR)$@
-	@printf "$(C_MAGENTA)$(NAME):$(C_NONE) %-25s$(C_GREE)[done]$(C_NONE)\n" $@
-
-imgui_impl_opengl3.o: $(IMPL_DIR)/imgui_impl_opengl3.cpp $(IMPL_DIR)/imgui_impl_opengl3.h
-	@g++ $(OPENGL3_IMPL_CFLAGS_GLEW) -c $< -o $(OBJ_DIR)/imgui_impl_opengl3.o
-	@printf "$(C_MAGENTA)$(NAME):$(C_NONE) %-25s$(C_GREE)[done]$(C_NONE)\n" $@
+$(OBJ_DIR)%.o: $(IMGUI_DIR)libs/gl3w/GL/%.c
+	@$(CC) $(CXXFLAGS) -c $< -o $@
+	@printf "$(C_MAGENTA)$(NAME):$(C_NONE) %-25s$(C_GREEN)[done]$(C_NONE)\n" $@
 
 clean:
 	@rm -rf $(OBJ_DIR)*
-	@make clean -C $(CIMGUI_DIR)
 	@printf "$(C_MAGENTA)$(NAME):$(C_NONE) %-25s$(C_RED)[done]$(C_NONE)\n" $@
 
 fclean: clean
 	@rm -rf $(NAME)
-	@make fclean -C $(CIMGUI_DIR)
 	@printf "$(C_MAGENTA)$(NAME):$(C_NONE) %-25s$(C_RED)[done]$(C_NONE)\n" $@
 
 re: fclean all
-
-norm:
-	@norminette $(SRC) $(HEADERS)
-
-
-
