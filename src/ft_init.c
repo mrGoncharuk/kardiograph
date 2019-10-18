@@ -1,6 +1,6 @@
 #include "kardiograph.h"
 
-int		ft_init_all(t_app *app)
+int		ft_init_window(t_app *app)
 {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
@@ -23,8 +23,6 @@ int		ft_init_all(t_app *app)
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 #endif
-
-	// and prepare OpenGL stuff
 	SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
@@ -36,6 +34,7 @@ int		ft_init_all(t_app *app)
 			"EKG generator", 0, 0, 1024, 768,
 			SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
 			);
+	
 	if (app->window == NULL)
 	{
 		SDL_Log("Failed to create window: %s", SDL_GetError());
@@ -66,6 +65,21 @@ int		ft_init_all(t_app *app)
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
 	igStyleColorsDark(NULL);
-	//ImFontAtlas_AddFontDefault(io.Fonts, NULL);
+	return (0);
+}
+
+void	ft_init_flags(t_flags *flags)
+{
+	flags->ig_window_shown = true;
+	flags->running = true;
+}
+
+int		ft_init_all(t_app *app, t_flags *flags)
+{
+	if (ft_init_window(app) < 0)
+		return (-1);
+	ft_init_flags(flags);
+	for (int i = 0; i < EKG_AMOUNT; i++)
+		app->ekgs[i] = 0;
 	return (0);
 }

@@ -26,7 +26,10 @@ CIMGUI_LIB = 	$(addprefix $(CIMGUI_DIR), $(CIMGUI_NAME))
 SRC_FILES =		main.c \
 				ft_init.c \
 				ft_mainloop.c \
-				ft_clean.c
+				ft_clean.c \
+				ekg_update.c \
+				ekg_event.c \
+				ekg_render.c
 
 
 HEADERS = 		$(INC_DIR)kardiograph.h
@@ -40,7 +43,7 @@ OBJ = 	$(addprefix $(OBJ_DIR), $(notdir $(SRC_FILES:.c=.o))) \
 
 
 
-CC = gcc
+CC = gcc -fsanitize=address
 CFLAGS = -Wall 
 INC = 		-I $(INC_DIR) \
 			-I $(CIMGUI_DIR) \
@@ -94,12 +97,12 @@ imgui_impl_opengl3.o: $(IMPL_DIR)/imgui_impl_opengl3.cpp $(IMPL_DIR)/imgui_impl_
 
 clean:
 	@rm -rf $(OBJ_DIR)*
-	@make clean -C $(CIMGUI_DIR)
+
 	@printf "$(C_MAGENTA)$(NAME):$(C_NONE) %-25s$(C_RED)[done]$(C_NONE)\n" $@
 
 fclean: clean
 	@rm -rf $(NAME)
-	@make fclean -C $(CIMGUI_DIR)
+
 	@printf "$(C_MAGENTA)$(NAME):$(C_NONE) %-25s$(C_RED)[done]$(C_NONE)\n" $@
 
 re: fclean all
