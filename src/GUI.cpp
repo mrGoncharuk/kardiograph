@@ -3,8 +3,8 @@
 
 GUI::GUI(/* args */): clearColor(0.45f, 0.55f, 0.60f, 1.00f), running(true)
 {
-	// Setup SDL
-    // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems, 
+    // Setup SDL
+    // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
     // depending on whether SDL_INIT_GAMECONTROLLER is enabled or disabled.. updating to latest version of SDL is recommended!)
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
     {
@@ -34,18 +34,18 @@ GUI::GUI(/* args */): clearColor(0.45f, 0.55f, 0.60f, 1.00f), running(true)
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    this->window = SDL_CreateWindow("GKrellM", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 600, 600, window_flags);
-    SDL_GLContext gl_context = SDL_GL_CreateContext(window);
-    SDL_GL_MakeCurrent(window, gl_context);
+   	window = SDL_CreateWindow("KardioGraph", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
+    glContext = SDL_GL_CreateContext(window);
+    SDL_GL_MakeCurrent(window, glContext);
     SDL_GL_SetSwapInterval(1); // Enable vsync
 
     // Initialize OpenGL loader
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
     bool err = gl3wInit() != 0;
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)
-    bool err = glewInit() !=
-    bool err = gladLoadGL() == 0; GLEW_OK;
+    bool err = glewInit() != GLEW_OK;
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
+    bool err = gladLoadGL() == 0;
 #else
     bool err = false; // If you use IMGUI_IMPL_OPENGL_LOADER_CUSTOM, your loader is likely to requires some form of initialization.
 #endif
@@ -66,7 +66,7 @@ GUI::GUI(/* args */): clearColor(0.45f, 0.55f, 0.60f, 1.00f), running(true)
     ImGui::StyleColorsClassic();
 
     // Setup Platform/Renderer bindings
-    ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
+    ImGui_ImplSDL2_InitForOpenGL(window, glContext);
     ImGui_ImplOpenGL3_Init(glsl_version);
     cardiocycle.calcFunction();
 }
@@ -108,26 +108,44 @@ void    GUI::events()
 
 void	GUI::update()
 {
-    // ImGuiStyle& style = ImGui::GetStyle();
-    // static ImGuiStyle ref_saved_style;
-
+    ImGuiStyle& style = ImGui::GetStyle();
+    static ImGuiStyle ref_saved_style;
+	static int	rbValue = T_WAVE;
+	static float width[2];
+	width[0] = getCurrentWave(rbValue).getB1();
+	width[1] = getCurrentWave(rbValue).getB2();
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplSDL2_NewFrame(window);
 	ImGui::NewFrame();
 
-	ImGui::Begin("GKrellM", NULL);
+	ImGui::Begin("KardioGraph", NULL);
 
-    // if (ImGui::ShowStyleSelector("Styles Selector"))
-    //     ref_saved_style = style;
-    // ImGui::ColorEdit3("Skin", (float*)&clearColor);
+    if (ImGui::ShowStyleSelector("Styles Selector"))
+        ref_saved_style = style;
+    ImGui::ColorEdit3("Skin", (float*)&clearColor);
     // static float ampl = 0;
-    // static float t = 0;
-    // ImGui::SliderFloat("Amplitude", &ampl, -1, 1, "%.3f", 1.0f);
-    // ImGui::SliderFloat("Time", &t, -1, 1, "%.3f", 1.0f);
-    // static float width[2] = {0};
-    // ImGui::SliderFloat2("Width", width, -1, 1, "%.3f", 1);
+    static float t = 0;
+    if (ImGui::SliderFloat("Amplitude", &getCurrentWave(rbValue).getAmplitude(), cardiocycle.getMinAmpl(), cardiocycle.getMaxAmpl(), "%.3f", 1.0f))
+		cardiocycle.calcFunction();
+    if (ImGui::SliderFloat("Time", &getCurrentWave(rbValue).getTExtreme(), 0, cardiocycle.getCounts(), "%.3f", 1.0f))
+		cardiocycle.calcFunction();
+    
+    if (ImGui::SliderFloat2("Width", width, 1, 20, "%.3f", 1))
+	{
+		getCurrentWave(rbValue).setB1(width[0]);
+		getCurrentWave(rbValue).setB2(width[1]);
+		cardiocycle.calcFunction();
+	}
+	ImGui::RadioButton("P", &rbValue, P_WAVE); ImGui::SameLine(50);
+	ImGui::RadioButton("Q", &rbValue, Q_WAVE); ImGui::SameLine(100);
+	ImGui::RadioButton("R", &rbValue, R_WAVE); ImGui::SameLine(150);
+	ImGui::RadioButton("S", &rbValue, S_WAVE); ImGui::SameLine(200);
+	ImGui::RadioButton("T", &rbValue, T_WAVE);
+	ImGui::End();
+
+	ImGui::Begin("ECG", NULL);
     ImGui::PlotLines("ECG", cardiocycle.getSignal(), cardiocycle.getCounts(), 1, NULL,
-                    cardiocycle.getMinAmpl(), cardiocycle.getMaxAmpl(), ImVec2(500, 500), 0);
+                    cardiocycle.getMinAmpl(), cardiocycle.getMaxAmpl(), ImVec2(500, 500), 4);
 	ImGui::End();
 
 }
@@ -135,12 +153,27 @@ void	GUI::update()
 void	GUI::render()
 {
 	ImGui::Render();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGuiIO& io = ImGui::GetIO();
 	glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 	glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
 	glClear(GL_COLOR_BUFFER_BIT);
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	SDL_GL_SwapWindow(window);
+}
+
+
+Wave	&GUI::getCurrentWave(int v)
+{
+	if (v == P_WAVE)
+		return (cardiocycle.getP());
+	if (v == Q_WAVE)
+		return (cardiocycle.getQ());
+	if (v == R_WAVE)
+		return (cardiocycle.getR());
+	if (v == S_WAVE)
+		return (cardiocycle.getS());
+	if (v == T_WAVE)
+		return (cardiocycle.getT());
 }
 
 SDL_Window *GUI::getWindow() { return (this->window); }

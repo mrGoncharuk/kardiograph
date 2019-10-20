@@ -11,8 +11,8 @@
 #   pacman -S mingw-w64-i686-SDL
 #
 
-#CXX = g++
-CXX = clang++
+CXX = g++
+# CXX = clang++
 
 IMPL_DIR = imgui_impl/
 IMGUI_DIR = imgui/
@@ -33,34 +33,23 @@ OBJS = $(addprefix $(OBJ_DIR), $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
 
 CXXFLAGS = -I$(IMPL_DIR) -I$(IMGUI_DIR) -Iincludes/
-CXXFLAGS += -g -Wall -Werror -Wextra
-LIBS = -lncurses
-
+CXXFLAGS += -g
+LIBS = 
 ##---------------------------------------------------------------------
 ## OPENGL LOADER
 ##---------------------------------------------------------------------
 
 ## Using OpenGL loader: gl3w [default]
-SOURCES += $(IMGUI_DIR)libs/gl3w/GL/gl3w.c
-CXXFLAGS += -I$(IMGUI_DIR)libs/gl3w
+# SOURCES += ../libs/gl3w/GL/gl3w.c
+# CXXFLAGS += -I../libs/gl3w
 
 ## Using OpenGL loader: glew
-## (This assumes a system-wide installation)
-# CXXFLAGS += -lGLEW -DIMGUI_IMPL_OPENGL_LOADER_GLEW
+# (This assumes a system-wide installation)
+CXXFLAGS += -lGLEW -DIMGUI_IMPL_OPENGL_LOADER_GLEW
 
 ## Using OpenGL loader: glad
 # SOURCES += ../libs/glad/src/glad.c
 # CXXFLAGS += -I../libs/glad/include -DIMGUI_IMPL_OPENGL_LOADER_GLAD
-
-##---------------------------------------------------------------------
-## OUTPUT COLORS
-##---------------------------------------------------------------------
-
-C_RED = \033[31m
-C_GREEN = \033[32m
-C_MAGENTA = \033[35m
-C_NONE = \033[0m
-
 
 ##---------------------------------------------------------------------
 ## BUILD FLAGS PER PLATFORM
@@ -77,7 +66,7 @@ endif
 ifeq ($(UNAME_S), Darwin) #APPLE
 	ECHO_MESSAGE = "Mac OS X"
 	LIBS += -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo `sdl2-config --libs`
-	LIBS += -L/usr/local/lib 
+	LIBS += -L/usr/local/lib -L/opt/local/lib
 
 	CXXFLAGS += `sdl2-config --cflags`
 	CXXFLAGS += -I/usr/local/include -I/opt/local/include
@@ -91,6 +80,15 @@ ifeq ($(findstring MINGW,$(UNAME_S)),MINGW)
    CXXFLAGS += `pkg-config --cflags sdl2`
    CFLAGS = $(CXXFLAGS)
 endif
+
+##---------------------------------------------------------------------
+## OUTPUT COLORS
+##---------------------------------------------------------------------
+
+C_RED = \033[31m
+C_GREEN = \033[32m
+C_MAGENTA = \033[35m
+C_NONE = \033[0m
 
 ##---------------------------------------------------------------------
 ## BUILD RULES

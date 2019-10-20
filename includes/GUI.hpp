@@ -38,6 +38,7 @@ public:
 	SDL_Window		*getWindow();
 	SDL_GLContext	getGLContext();
 	ImVec4			getClearColor();
+	Wave			&getCurrentWave(int w);
 	void			mainloop();
 	void			events();
 	void			update();

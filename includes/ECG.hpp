@@ -1,8 +1,16 @@
 #ifndef ECG_HPP
 # define ECG_HPP
 
-#
 # include "Wave.hpp"
+
+enum	e_wave_type
+{
+	P_WAVE,
+	Q_WAVE,
+	R_WAVE,
+	S_WAVE,
+	T_WAVE
+};
 
 class ECG
 {
@@ -11,9 +19,9 @@ private:
 	Wave	Q;
 	Wave	R;
 	Wave	S;
-	Wave	ST;
 	Wave	T;
 
+	int		Fh;
 	float	t;
 	float	tStep;
 	float	minAmpl;
@@ -27,6 +35,13 @@ public:
 	int		getCounts() const;
 	float	getMaxAmpl() const;
 	float	getMinAmpl() const;
+	int		getFH() const;
+	void	setFH(int newFH);
+	Wave	&getP();
+	Wave	&getQ();
+	Wave	&getR();
+	Wave	&getS();
+	Wave	&getT();
 	~ECG();
 };
 
