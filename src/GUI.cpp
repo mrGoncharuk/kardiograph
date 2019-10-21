@@ -112,6 +112,7 @@ void	GUI::update()
     static ImGuiStyle ref_saved_style;
 	static int	rbValue = T_WAVE;
 	static float width[2];
+    static int      heart_rate = cardiocycle.getFH();
 	width[0] = getCurrentWave(rbValue).getB1();
 	width[1] = getCurrentWave(rbValue).getB2();
 	ImGui_ImplOpenGL3_NewFrame();
@@ -119,7 +120,7 @@ void	GUI::update()
 	ImGui::NewFrame();
 
 	ImGui::Begin("KardioGraph", NULL);
-
+    ImGui::ShowDemoWindow();
     if (ImGui::ShowStyleSelector("Styles Selector"))
         ref_saved_style = style;
     ImGui::ColorEdit3("Skin", (float*)&clearColor);
@@ -136,6 +137,14 @@ void	GUI::update()
 		getCurrentWave(rbValue).setB2(width[1]);
 		cardiocycle.calcFunction();
 	}
+    if (ImGui::InputInt("Heart rate", &heart_rate))
+    {
+        if (heart_rate < 5)
+            heart_rate = 5;
+        else if (heart_rate > 200)
+            heart_rate = 200;
+        cardiocycle.setFH(heart_rate);
+    }
 	ImGui::RadioButton("P", &rbValue, P_WAVE); ImGui::SameLine(50);
 	ImGui::RadioButton("Q", &rbValue, Q_WAVE); ImGui::SameLine(100);
 	ImGui::RadioButton("R", &rbValue, R_WAVE); ImGui::SameLine(150);
@@ -166,13 +175,13 @@ Wave	&GUI::getCurrentWave(int v)
 {
 	if (v == P_WAVE)
 		return (cardiocycle.getP());
-	if (v == Q_WAVE)
+	else if (v == Q_WAVE)
 		return (cardiocycle.getQ());
-	if (v == R_WAVE)
+	else if (v == R_WAVE)
 		return (cardiocycle.getR());
-	if (v == S_WAVE)
+	else if (v == S_WAVE)
 		return (cardiocycle.getS());
-	if (v == T_WAVE)
+	else
 		return (cardiocycle.getT());
 }
 

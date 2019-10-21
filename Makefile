@@ -11,7 +11,7 @@
 #   pacman -S mingw-w64-i686-SDL
 #
 
-CXX = g++
+CXX = g++ -std=c++11
 # CXX = clang++
 
 IMPL_DIR = imgui_impl/
@@ -28,7 +28,7 @@ SRC = 	main.cpp \
 
 SOURCES = $(addprefix $(SRC_DIR), $(SRC))
 SOURCES += $(IMPL_DIR)imgui_impl_sdl.cpp $(IMPL_DIR)imgui_impl_opengl3.cpp
-SOURCES += $(IMGUI_DIR)imgui.cpp $(IMGUI_DIR)imgui_demo.cpp $(IMGUI_DIR)imgui_draw.cpp $(IMGUI_DIR)imgui_widgets.cpp
+SOURCES += $(IMGUI_DIR)imgui.cpp $(IMGUI_DIR)imgui_demo.cpp $(IMGUI_DIR)imgui_draw.cpp $(IMGUI_DIR)imgui_widgets.cpp $(IMGUI_DIR)imgui_plot.cpp 
 OBJS = $(addprefix $(OBJ_DIR), $(addsuffix .o, $(basename $(notdir $(SOURCES)))))
 UNAME_S := $(shell uname -s)
 
@@ -40,16 +40,16 @@ LIBS =
 ##---------------------------------------------------------------------
 
 ## Using OpenGL loader: gl3w [default]
-# SOURCES += ../libs/gl3w/GL/gl3w.c
-# CXXFLAGS += -I../libs/gl3w
+SOURCES += imgui/libs/gl3w/GL/gl3w.c
+CXXFLAGS += -Iimgui/libs/gl3w
 
 ## Using OpenGL loader: glew
 # (This assumes a system-wide installation)
-CXXFLAGS += -lGLEW -DIMGUI_IMPL_OPENGL_LOADER_GLEW
+# CXXFLAGS += -lGLEW -DIMGUI_IMPL_OPENGL_LOADER_GLEW
 
 ## Using OpenGL loader: glad
-# SOURCES += ../libs/glad/src/glad.c
-# CXXFLAGS += -I../libs/glad/include -DIMGUI_IMPL_OPENGL_LOADER_GLAD
+# SOURCES += imgui/libs/glad/src/glad.c
+# CXXFLAGS += -Iimgui/libs/glad/include -DIMGUI_IMPL_OPENGL_LOADER_GLAD
 
 ##---------------------------------------------------------------------
 ## BUILD FLAGS PER PLATFORM

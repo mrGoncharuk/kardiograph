@@ -12,6 +12,8 @@ Wave::Wave(std::string p_label, float p_ampl, float p_textreme, float p_b1, floa
 		, b1(p_b1)
 		, b2(p_b2)
 {
+	tBegin = tExtreme - 3 * b1;
+	tEnd = tExtreme + 3 * b2;
 }
 
 Wave::Wave(Wave const &cpy)
@@ -58,9 +60,23 @@ Wave::~Wave()
 }
 
 void	Wave::setLabel(std::string p_label) { label = p_label; }
-void	Wave::setTExtreme(float p) { tExtreme = p; }
-void	Wave::setB1(float p) { b1 = p; }
-void	Wave::setB2(float p) { b2 = p; }
+void	Wave::setTExtreme(float p)
+{
+	tExtreme = p;
+	tBegin = tExtreme - 3 * b1;
+	tEnd = tExtreme + 3 * b2;
+}
+void	Wave::setB1(float p)
+{
+	b1 = p;
+	tBegin = tExtreme - 3 * b1;
+}
+void	Wave::setB2(float p)
+{
+	b2 = p;
+	tEnd = tExtreme + 3 * b2;
+}
+
 void	Wave::setAmplitude(float p) { amplitude = p; }
 void	Wave::setTBegin(float p) { tBegin = p; }
 void	Wave::setTEnd(float p) { tEnd = p; }

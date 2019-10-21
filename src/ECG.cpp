@@ -1,15 +1,16 @@
 #include "ECG.hpp"
 #include <iostream>
 ECG::ECG()
-	: P("P", 1, 0, 14, 14)
+	: Fh(60)
+	, t(60 * 1000 / Fh)
+	, minAmpl(-5)
+	, maxAmpl(10) 
+	, P("P", 1, 0, 14, 14)
 	, Q("Q", -1.4, 0, 10, 10)
 	, R("R", 7, 0, 11, 11)
 	, S("S", -2.4, 0, 10, 10)
 	, T("T", 1.5, 0, 20, 20)
-	, Fh(60)
-	, tStep(0.001)
-	, minAmpl(-5)
-	, maxAmpl(10)
+
 {
 	t = 60 * 1000 / Fh;
 	counts = t;
@@ -19,7 +20,74 @@ ECG::ECG()
 	R.setTExtreme(t / 2.6);
 	S.setTExtreme(t / 2.5);
 	T.setTExtreme(t / 2.0);
+	isViewReal();
 	std::cout << "Counts: " << counts << std::endl;
+}
+
+bool	ECG::isPViewReal()
+{
+	if ( 0 <= P.getTBegin() &&  P.getTBegin() < P.getTEnd())
+		return (true);
+	return (false);
+}
+
+bool	ECG::isQViewReal()
+{
+	if (P.getTEnd() <= Q.getTBegin() && Q.getTBegin() < Q.getTEnd())
+		return (true);
+	return (false);
+}
+
+bool	ECG::isRViewReal()
+{
+	if (Q.getTEnd() == R.getTBegin() && R.getTBegin() < R.getTEnd())
+		return (true);
+	return (false);
+}
+
+bool	ECG::isSViewReal()
+{
+	if (R.getTEnd() == S.getTBegin() && S.getTBegin() < S.getTEnd())
+		return (true);
+	return (false);
+}
+
+bool	ECG::isTViewReal()
+{
+	if (S.getTEnd() <= T.getTBegin() && T.getTBegin() < T.getTEnd())
+		return (true);
+	return (false);
+}
+
+bool	ECG::isViewReal()
+{
+	bool	res = true;
+	if (isPViewReal() == false)
+	{
+		std::cout << "P wave parameters is bad!\n";
+		res = false;
+	}
+	if (isQViewReal() == false)
+	{
+		std::cout << "Q wave parameters is bad!\n";
+		res = false;
+	}
+	if (isRViewReal() == false)
+	{
+		std::cout << "R wave parameters is bad!\n";
+		res = false;
+	}
+	if (isSViewReal() == false)
+	{
+		std::cout << "S wave parameters is bad!\n";
+		res = false;
+	}
+	if (isTViewReal() == false)
+	{
+		std::cout << "T wave parameters is bad!\n";
+		res = false;
+	}
+	return (res);
 }
 
 void	ECG::calcFunction()
@@ -31,9 +99,7 @@ void	ECG::calcFunction()
 		signal[i] += Q.calcSignal(i);
 		signal[i] += R.calcSignal(i);
 		signal[i] += S.calcSignal(i);
-		// signal[i] += ST.calcSignal(i);	
 		signal[i] += T.calcSignal(i);	
-		// currT += tStep;
 	}
 }
 
@@ -47,6 +113,10 @@ void	ECG::setFH(int newFH)
 {
 	Fh = newFH;
 	t = 60 * 1000 / Fh;
+	counts = t;
+	delete []signal;
+	signal = new float[counts]();
+	calcFunction();
 }
 
 ECG::~ECG()

@@ -23,7 +23,6 @@ private:
 
 	int		Fh;
 	float	t;
-	float	tStep;
 	float	minAmpl;
 	float	maxAmpl;
 	float	*signal;
@@ -31,6 +30,12 @@ private:
 public:
 	ECG(/* args */);
 	void	calcFunction();
+	bool	isViewReal();
+	bool	isPViewReal();
+	bool	isQViewReal();
+	bool	isRViewReal();
+	bool	isSViewReal();
+	bool	isTViewReal();
 	float	*getSignal() const;
 	int		getCounts() const;
 	float	getMaxAmpl() const;
