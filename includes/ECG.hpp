@@ -22,26 +22,37 @@ private:
 	Wave	T;
 
 	int		Fh;
-	float	t;
+	int		t;
 	float	minAmpl;
 	float	maxAmpl;
+	float	*etalon;
 	float	*signal;
 	int		counts;
+	int		cycleAmount;
+	float	noisePower;
 public:
 	ECG(/* args */);
-	void	calcFunction();
+	void	generateSignal();
+	void	calcEtalon();
 	bool	isViewReal();
 	bool	isPViewReal();
 	bool	isQViewReal();
 	bool	isRViewReal();
 	bool	isSViewReal();
 	bool	isTViewReal();
+	float	*getEtalon() const;
 	float	*getSignal() const;
-	int		getCounts() const;
+	int		getCycleAmount() const;
+	int		getEtalonDuration() const;
 	float	getMaxAmpl() const;
 	float	getMinAmpl() const;
+	int		getSignalDuration() const;
 	int		getFH() const;
+	float	getNoisePower() const;
+
+	void	setNoisePower(float p);
 	void	setFH(int newFH);
+	void	setCycleAmount(const int amount);
 	Wave	&getP();
 	Wave	&getQ();
 	Wave	&getR();

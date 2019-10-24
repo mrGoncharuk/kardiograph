@@ -1,5 +1,6 @@
 #include "Wave.hpp"
 #include <iostream>
+#include <cstdlib>
 
 Wave::Wave(/* args */)
 {
@@ -11,6 +12,8 @@ Wave::Wave(std::string p_label, float p_ampl, float p_textreme, float p_b1, floa
 		, tExtreme(p_textreme)
 		, b1(p_b1)
 		, b2(p_b2)
+		, alternation(0)
+		, isAltered(false)
 {
 	tBegin = tExtreme - 3 * b1;
 	tEnd = tExtreme + 3 * b2;
@@ -45,12 +48,22 @@ Wave &Wave::operator =(Wave const &cpy)
 
 float	Wave::calcSignal(float currT)
 {
+	static float lambda = 1;
+	float	currAmpl = amplitude;
 	float res;
 	
+	if (isAltered)
+	{
+		if (lambda == 1)
+			lambda = (1 + alternation * (rand() % 100 / 100.0f) / amplitude);
+		else
+			lambda = 1;
+		currAmpl = currAmpl * lambda;
+	}
 	if (currT <= tExtreme)
-		res = amplitude * exp(-(pow(currT - tExtreme, 2) / (2 * pow(b1, 2))));
+		res = currAmpl * exp(-(pow(currT - tExtreme, 2) / (2 * pow(b1, 2))));
 	else
-		res = amplitude * exp(-(pow(currT - tExtreme, 2) / (2 * pow(b2, 2))));
+		res = currAmpl * exp(-(pow(currT - tExtreme, 2) / (2 * pow(b2, 2))));
 	//std::cout << label << ": " << res << std::endl;
 	return (res);
 }
@@ -80,6 +93,8 @@ void	Wave::setB2(float p)
 void	Wave::setAmplitude(float p) { amplitude = p; }
 void	Wave::setTBegin(float p) { tBegin = p; }
 void	Wave::setTEnd(float p) { tEnd = p; }
+void	Wave::setAlternation(float p) { alternation = p; }
+void	Wave::setIsAltered(bool p) { isAltered = p; }
 
 std::string Wave::getLabel() { return label; }
 float		&Wave::getTExtreme() { return tExtreme; }
@@ -88,3 +103,5 @@ float		&Wave::getB2() { return b2; }
 float		&Wave::getAmplitude() { return amplitude; }
 float		&Wave::getTBegin() { return tBegin; }
 float		&Wave::getTEnd() { return tEnd; }
+float		&Wave::getAlternation() { return alternation; }
+bool		Wave::getIsAltered() const { return isAltered; }

@@ -14,6 +14,8 @@ private:
 	float		amplitude;	//	amplitude of wave
 	float		tBegin;
 	float		tEnd;
+	float		alternation;
+	bool		isAltered;
 public:
 	Wave();
 	Wave(Wave const &cpy);
@@ -30,13 +32,19 @@ public:
 	void		setAmplitude(float p);
 	void		setTBegin(float p);
 	void		setTEnd(float p);
+	void		setAlternation(float p);
+	void		setIsAltered(bool p);
+
+
 	std::string getLabel();
+	float		&getAlternation();
 	float		&getTExtreme();
 	float		&getB1();
 	float		&getB2();
 	float		&getAmplitude();
 	float		&getTBegin();
 	float		&getTEnd();
+	bool		getIsAltered() const;
 };
 
 

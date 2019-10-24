@@ -1,10 +1,13 @@
 #include "ECG.hpp"
 #include <iostream>
+#include <math.h>
 ECG::ECG()
 	: Fh(60)
+	, cycleAmount(10)
 	, t(60 * 1000 / Fh)
-	, minAmpl(-5)
-	, maxAmpl(10) 
+	, minAmpl(-3)
+	, maxAmpl(10)
+	, noisePower(0)
 	, P("P", 1, 0, 14, 14)
 	, Q("Q", -1.4, 0, 10, 10)
 	, R("R", 7, 0, 11, 11)
@@ -12,16 +15,19 @@ ECG::ECG()
 	, T("T", 1.5, 0, 20, 20)
 
 {
+
 	t = 60 * 1000 / Fh;
 	counts = t;
-	signal = new float[counts]();
+	etalon = new float[t];
+	signal = new float[t * cycleAmount];
 	P.setTExtreme(t / 3.4);
 	Q.setTExtreme(t / 2.7);
 	R.setTExtreme(t / 2.6);
 	S.setTExtreme(t / 2.5);
 	T.setTExtreme(t / 2.0);
-	isViewReal();
-	std::cout << "Counts: " << counts << std::endl;
+	T.setIsAltered(true);
+	// isViewReal();
+	// std::cout << "Counts: " << counts << std::endl;
 }
 
 bool	ECG::isPViewReal()
@@ -90,38 +96,68 @@ bool	ECG::isViewReal()
 	return (res);
 }
 
-void	ECG::calcFunction()
+void	ECG::generateSignal()
 {
-	for (int i = 0; i < counts; i++)
+	if (counts != t * cycleAmount)
 	{
+		counts = t* cycleAmount;
+		delete[] signal;
+		signal = new float[counts];
+	}
+
+	int		k;
+	for (int i = 0; i < (counts); i++)
+	{
+		k = (i) % t;
 		signal[i] = 0;
-		signal[i] += P.calcSignal(i);
-		signal[i] += Q.calcSignal(i);
-		signal[i] += R.calcSignal(i);
-		signal[i] += S.calcSignal(i);
-		signal[i] += T.calcSignal(i);	
+		signal[i] += P.calcSignal(k);
+		signal[i] += Q.calcSignal(k);
+		signal[i] += R.calcSignal(k);
+		signal[i] += S.calcSignal(k);
+		signal[i] += T.calcSignal(k);
+		signal[i] +=  noisePower * cos(i / 4.0f);
+	}
+
+}
+
+
+void	ECG::calcEtalon()
+{
+	for (int i = 0; i < t; i++)
+	{
+		etalon[i] = 0;
+		etalon[i] += P.calcSignal(i);
+		etalon[i] += Q.calcSignal(i);
+		etalon[i] += R.calcSignal(i);
+		etalon[i] += S.calcSignal(i);
+		etalon[i] += T.calcSignal(i);	
 	}
 }
 
+float	*ECG::getEtalon() const { return (etalon); }
 float	*ECG::getSignal() const { return (signal); }
-int		ECG::getCounts() const { return (counts); }
+int		ECG::getEtalonDuration() const { return (t); }
 float	ECG::getMaxAmpl() const { return (maxAmpl); }
 float	ECG::getMinAmpl() const { return (minAmpl); }
 int		ECG::getFH() const { return (Fh); }
+int		ECG::getCycleAmount() const { return (cycleAmount); }
+int		ECG::getSignalDuration() const { return counts; }
+float	ECG::getNoisePower() const { return noisePower; }
 
+void	ECG::setCycleAmount(const int amount){ this->cycleAmount = amount; }
+void	ECG::setNoisePower(float p) { noisePower = p; }
 void	ECG::setFH(int newFH)
 {
 	Fh = newFH;
 	t = 60 * 1000 / Fh;
-	counts = t;
-	delete []signal;
-	signal = new float[counts]();
-	calcFunction();
+	delete []etalon;
+	etalon = new float[t];
+	calcEtalon();
 }
 
 ECG::~ECG()
 {
-	delete []signal;
+	delete []etalon;
 }
 
 Wave	&ECG::getP() { return P; }

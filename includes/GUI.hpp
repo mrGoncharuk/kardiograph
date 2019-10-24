@@ -2,6 +2,7 @@
 # define GUI_HPP
 
 #include "imgui.h"
+#include "imgui_plot.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 #include <stdio.h>
@@ -9,7 +10,7 @@
 
 #include "IMonitorDisplay.hpp"
 #include "ECG.hpp"
-
+#include "Filter.hpp"
 
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
 #include <GL/gl3w.h>    // Initialize with gl3wInit()
@@ -28,7 +29,10 @@ private:
 	SDL_GLContext	glContext;
 	ImVec4 			clearColor;
 	bool			running;
+	bool			showGenSignal;
+	bool			showEtalon;
 	ECG				cardiocycle;
+	Filter			filter;
 public:
 	GUI();
 	~GUI();
@@ -43,6 +47,7 @@ public:
 	void			events();
 	void			update();
 	void			render();
+	void			drawECG();
 };
 
 #endif

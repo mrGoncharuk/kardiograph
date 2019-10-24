@@ -23,7 +23,8 @@ SRC = 	main.cpp \
 		GUI.cpp \
 		IMonitorDisplay.cpp \
 		Wave.cpp \
-		ECG.cpp
+		ECG.cpp \
+		Filter.cpp
 
 
 SOURCES = $(addprefix $(SRC_DIR), $(SRC))
@@ -33,19 +34,19 @@ OBJS = $(addprefix $(OBJ_DIR), $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
 
 CXXFLAGS = -I$(IMPL_DIR) -I$(IMGUI_DIR) -Iincludes/
-CXXFLAGS += -g
+CXXFLAGS += -g -fsanitize=address
 LIBS = 
 ##---------------------------------------------------------------------
 ## OPENGL LOADER
 ##---------------------------------------------------------------------
 
 ## Using OpenGL loader: gl3w [default]
-SOURCES += imgui/libs/gl3w/GL/gl3w.c
-CXXFLAGS += -Iimgui/libs/gl3w
+# SOURCES += imgui/libs/gl3w/GL/gl3w.c
+# CXXFLAGS += -Iimgui/libs/gl3w
 
 ## Using OpenGL loader: glew
 # (This assumes a system-wide installation)
-# CXXFLAGS += -lGLEW -DIMGUI_IMPL_OPENGL_LOADER_GLEW
+CXXFLAGS += -lGLEW -DIMGUI_IMPL_OPENGL_LOADER_GLEW
 
 ## Using OpenGL loader: glad
 # SOURCES += imgui/libs/glad/src/glad.c

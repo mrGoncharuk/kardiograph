@@ -1,7 +1,7 @@
 #include "GUI.hpp"
 
 
-GUI::GUI(/* args */): clearColor(0.45f, 0.55f, 0.60f, 1.00f), running(true)
+GUI::GUI(/* args */): clearColor(0.45f, 0.55f, 0.60f, 1.00f), running(true), showGenSignal(false)
 {
     // Setup SDL
     // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
@@ -68,7 +68,8 @@ GUI::GUI(/* args */): clearColor(0.45f, 0.55f, 0.60f, 1.00f), running(true)
     // Setup Platform/Renderer bindings
     ImGui_ImplSDL2_InitForOpenGL(window, glContext);
     ImGui_ImplOpenGL3_Init(glsl_version);
-    cardiocycle.calcFunction();
+    cardiocycle.calcEtalon();
+	cardiocycle.generateSignal();
 }
 
 GUI::~GUI()
@@ -106,6 +107,81 @@ void    GUI::events()
     }
 }
 
+void	GUI::drawECG()
+{
+	static int cycles = cardiocycle.getCycleAmount();
+	static float altPower = cardiocycle.getT().getAlternation();
+	static float noisePower = cardiocycle.getNoisePower();
+	static float alpha = 0;
+	static bool		isExpSmooth = false;
+
+	ImGui::Begin("ECG", &showGenSignal);
+
+	ImGui::PlotConfig conf;
+	// conf.values.xs = x_data; // this line is optional
+	conf.values.ys = cardiocycle.getSignal();
+	conf.values.count = cardiocycle.getSignalDuration();
+	conf.grid_x.size = cardiocycle.getSignalDuration();
+	
+	conf.scale.min = cardiocycle.getMinAmpl();
+	conf.scale.max = cardiocycle.getMaxAmpl();
+	conf.tooltip.show = true;
+	conf.tooltip.format = "x=%.2f, y=%.2f";
+	conf.grid_x.show = true;
+	conf.grid_y.show = true;
+	conf.frame_size = ImVec2(1000, 300);
+	conf.line_thickness = 1.f;
+
+	ImGui::Plot("plot", conf);
+	ImGui::PushItemWidth(200);
+	if (ImGui::InputInt("Cycle amount", &cycles))
+	{
+		if (cycles < 2)
+			cycles = 2;
+		if (cycles > 30)
+			cycles = 30;
+		cardiocycle.setCycleAmount(cycles);
+		cardiocycle.generateSignal();
+	}
+	ImGui::SameLine();
+	if (ImGui::SliderFloat("Alternation Power of T", &altPower, 0, 1.0f, "%.2f", 1))
+	{
+		cardiocycle.getT().setAlternation(altPower);
+		cardiocycle.generateSignal();
+	}
+	ImGui::SameLine();
+	if (ImGui::SliderFloat("Noise Power", &noisePower, 0, 1, "%.3f", 1))
+	{
+		cardiocycle.setNoisePower(noisePower);
+		cardiocycle.generateSignal();
+	}
+	
+	if (ImGui::SliderFloat("Alpha", &alpha, 0, 1, "%.3f", 1))
+	{
+		filter.setData(cardiocycle.getSignal());
+		filter.setDataSize(cardiocycle.getSignalDuration());
+		filter.filterExpSmooth(alpha);
+		conf.values.ys = filter.getFilteredData();
+		ImGui::Plot("plot", conf);
+	}
+	if (ImGui::Button("Exponential Smooth filter"))
+		isExpSmooth = true;
+	ImGui::End();
+
+	ImGui::Begin("Filter", &isExpSmooth);
+	if (ImGui::SliderFloat("Alpha", &alpha, 0, 1, "%.3f", 1))
+	{
+		filter.setData(cardiocycle.getSignal());
+		filter.setDataSize(cardiocycle.getSignalDuration());
+		filter.filterExpSmooth(alpha);
+		conf.values.ys = filter.getFilteredData();
+	}
+	if (filter.getFilteredData() != NULL)
+		conf.values.ys = filter.getFilteredData();
+	ImGui::Plot("plot", conf);
+	ImGui::End();
+}
+
 void	GUI::update()
 {
     ImGuiStyle& style = ImGui::GetStyle();
@@ -127,22 +203,22 @@ void	GUI::update()
     // static float ampl = 0;
     static float t = 0;
     if (ImGui::SliderFloat("Amplitude", &getCurrentWave(rbValue).getAmplitude(), cardiocycle.getMinAmpl(), cardiocycle.getMaxAmpl(), "%.3f", 1.0f))
-		cardiocycle.calcFunction();
-    if (ImGui::SliderFloat("Time", &getCurrentWave(rbValue).getTExtreme(), 0, cardiocycle.getCounts(), "%.3f", 1.0f))
-		cardiocycle.calcFunction();
+		cardiocycle.calcEtalon();
+    if (ImGui::SliderFloat("Time", &getCurrentWave(rbValue).getTExtreme(), 0, cardiocycle.getEtalonDuration(), "%.3f", 1.0f))
+		cardiocycle.calcEtalon();
     
     if (ImGui::SliderFloat2("Width", width, 1, 20, "%.3f", 1))
 	{
 		getCurrentWave(rbValue).setB1(width[0]);
 		getCurrentWave(rbValue).setB2(width[1]);
-		cardiocycle.calcFunction();
+		cardiocycle.calcEtalon();
 	}
     if (ImGui::InputInt("Heart rate", &heart_rate))
     {
         if (heart_rate < 5)
             heart_rate = 5;
-        else if (heart_rate > 200)
-            heart_rate = 200;
+        else if (heart_rate > 120)
+            heart_rate = 120;
         cardiocycle.setFH(heart_rate);
     }
 	ImGui::RadioButton("P", &rbValue, P_WAVE); ImGui::SameLine(50);
@@ -150,13 +226,20 @@ void	GUI::update()
 	ImGui::RadioButton("R", &rbValue, R_WAVE); ImGui::SameLine(150);
 	ImGui::RadioButton("S", &rbValue, S_WAVE); ImGui::SameLine(200);
 	ImGui::RadioButton("T", &rbValue, T_WAVE);
+	if (ImGui::Button("Generate Signal", ImVec2(125, 25)))
+	{
+		showGenSignal = true;
+		cardiocycle.generateSignal();
+	}
 	ImGui::End();
 
-	ImGui::Begin("ECG", NULL);
-    ImGui::PlotLines("ECG", cardiocycle.getSignal(), cardiocycle.getCounts(), 1, NULL,
+	ImGui::Begin("CardioCycle", NULL);
+    ImGui::PlotLines("CardioCycle", cardiocycle.getEtalon(), cardiocycle.getEtalonDuration(), 4, NULL,
                     cardiocycle.getMinAmpl(), cardiocycle.getMaxAmpl(), ImVec2(500, 500), 4);
 	ImGui::End();
 
+	if (showGenSignal)
+		drawECG();
 }
 
 void	GUI::render()
