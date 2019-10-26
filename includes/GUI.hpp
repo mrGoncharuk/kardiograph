@@ -31,6 +31,7 @@ private:
 	bool			running;
 	bool			showGenSignal;
 	bool			showEtalon;
+	bool			showFilterWindow;
 	ECG				cardiocycle;
 	Filter			filter;
 public:

@@ -101,7 +101,8 @@ void	ECG::generateSignal()
 	if (counts != t * cycleAmount)
 	{
 		counts = t* cycleAmount;
-		delete[] signal;
+		if (signal)
+			delete[] signal;
 		signal = new float[counts];
 	}
 
@@ -158,6 +159,13 @@ void	ECG::setFH(int newFH)
 ECG::~ECG()
 {
 	delete []etalon;
+	etalon = NULL;
+	if (signal)
+	{
+		delete []signal;
+		signal = NULL;
+	}
+	
 }
 
 Wave	&ECG::getP() { return P; }

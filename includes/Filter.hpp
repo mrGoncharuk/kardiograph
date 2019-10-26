@@ -2,8 +2,10 @@
 # define FILTER_HPP
 
 # include <string>
-
-enum e_processing_type {PT_SLIDING_MEAN, PT_EXP_SMOTH, PT_ADAPT_SMOTH};
+# include <math.h>
+enum e_filter_type {FILTER_SLIDING_MEAN, FILTER_EXP_SMOTH, FILTER_ADAPT_SMOTH};
+#define MEAN_TYPE_PREV 0
+#define MEAN_TYPE_FUTURE 1
 
 class Filter
 {
@@ -23,9 +25,10 @@ public:
 	void	setData(float *data);
 	void	setDataSize(size_t DataSize);
 	void	setFilteredData(float *p_filteredData);
-	void	filterSlidingMean(size_t windowWidth, bool isPrev, bool isFuture);
+	void	filterSlidingMean(size_t windowWidth, int meanType);
 	void	filterExpSmooth(float alpha);
-	void	filterAdaptSmoth();
+	void	filterAdaptSmoth(const size_t windowWidth, float noisePower);
+	inline bool	isOverSmoothed(float raw, float filtered, float noisePower);
 	void	prepareFilteredData();
 	Filter();
 	Filter(Filter const &cpy);

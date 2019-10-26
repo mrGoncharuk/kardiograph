@@ -1,7 +1,7 @@
 #include "GUI.hpp"
 
 
-GUI::GUI(/* args */): clearColor(0.45f, 0.55f, 0.60f, 1.00f), running(true), showGenSignal(false)
+GUI::GUI(/* args */): clearColor(0.45f, 0.55f, 0.60f, 1.00f), running(true), showGenSignal(false), showFilterWindow(false)
 {
     // Setup SDL
     // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
@@ -112,8 +112,9 @@ void	GUI::drawECG()
 	static int cycles = cardiocycle.getCycleAmount();
 	static float altPower = cardiocycle.getT().getAlternation();
 	static float noisePower = cardiocycle.getNoisePower();
-	static float alpha = 0;
-	static bool		isExpSmooth = false;
+	static float alpha = 1;
+	static int filterType = FILTER_EXP_SMOTH;
+	static int meanType = MEAN_TYPE_FUTURE;
 
 	ImGui::Begin("ECG", &showGenSignal);
 
@@ -143,43 +144,88 @@ void	GUI::drawECG()
 		cardiocycle.setCycleAmount(cycles);
 		cardiocycle.generateSignal();
 	}
-	ImGui::SameLine();
+	
 	if (ImGui::SliderFloat("Alternation Power of T", &altPower, 0, 1.0f, "%.2f", 1))
 	{
 		cardiocycle.getT().setAlternation(altPower);
 		cardiocycle.generateSignal();
 	}
-	ImGui::SameLine();
+	
 	if (ImGui::SliderFloat("Noise Power", &noisePower, 0, 1, "%.3f", 1))
 	{
 		cardiocycle.setNoisePower(noisePower);
 		cardiocycle.generateSignal();
 	}
-	
-	if (ImGui::SliderFloat("Alpha", &alpha, 0, 1, "%.3f", 1))
-	{
-		filter.setData(cardiocycle.getSignal());
-		filter.setDataSize(cardiocycle.getSignalDuration());
-		filter.filterExpSmooth(alpha);
-		conf.values.ys = filter.getFilteredData();
-		ImGui::Plot("plot", conf);
-	}
-	if (ImGui::Button("Exponential Smooth filter"))
-		isExpSmooth = true;
+	if (ImGui::Button("Filter Signal"))
+		showFilterWindow = true;
 	ImGui::End();
 
-	ImGui::Begin("Filter", &isExpSmooth);
-	if (ImGui::SliderFloat("Alpha", &alpha, 0, 1, "%.3f", 1))
+
+	if (showFilterWindow)
 	{
-		filter.setData(cardiocycle.getSignal());
-		filter.setDataSize(cardiocycle.getSignalDuration());
-		filter.filterExpSmooth(alpha);
-		conf.values.ys = filter.getFilteredData();
+		ImGui::Begin("Filter", &showFilterWindow);
+		if (filter.getFilteredData() != NULL)
+			conf.values.ys = filter.getFilteredData();
+		ImGui::Plot("plot", conf);
+		ImGui::RadioButton("Exponentional Smoothing", &filterType, FILTER_EXP_SMOTH);
+		ImGui::RadioButton("Sliding Mean", &filterType, FILTER_SLIDING_MEAN);
+		ImGui::RadioButton("Adaptive Smoothing", &filterType, FILTER_ADAPT_SMOTH);
+		switch (filterType)
+		{
+		case FILTER_EXP_SMOTH:
+			ImGui::PushItemWidth(300);
+			if (ImGui::SliderFloat("Alpha", &alpha, 0, 1, "%.3f", 1))
+			{
+				filter.setData(cardiocycle.getSignal());
+				filter.setDataSize(cardiocycle.getSignalDuration());
+				filter.filterExpSmooth(alpha);
+				conf.values.ys = filter.getFilteredData();
+			}
+			break;
+		case FILTER_SLIDING_MEAN:
+
+			static int windowWidth = 10;
+
+			if (ImGui::SliderInt("Window Width", &windowWidth, 1, 100, "%d"))
+			{
+				filter.setData(cardiocycle.getSignal());
+				filter.setDataSize(cardiocycle.getSignalDuration());
+				filter.filterSlidingMean(windowWidth, meanType);
+				conf.values.ys = filter.getFilteredData();
+			}
+			if (ImGui::RadioButton("Smoothing with Previous signal value", &meanType, MEAN_TYPE_PREV) ||
+			ImGui::RadioButton("Smoothing with Future signal value", &meanType, MEAN_TYPE_FUTURE))
+			{
+				filter.setData(cardiocycle.getSignal());
+				filter.setDataSize(cardiocycle.getSignalDuration());
+				filter.filterSlidingMean(windowWidth, meanType);
+				conf.values.ys = filter.getFilteredData();
+			}
+			break;
+		case FILTER_ADAPT_SMOTH:
+			static int		maxWindowWidth;
+			static float	h;
+			if (ImGui::SliderInt("Window Width", &windowWidth, 1, 100, "Window width: %d"))
+			{
+				filter.setData(cardiocycle.getSignal());
+				filter.setDataSize(cardiocycle.getSignalDuration());
+				filter.filterAdaptSmoth(windowWidth, h);
+				conf.values.ys = filter.getFilteredData();
+			}
+			if (ImGui::SliderFloat("", &h, 0, 1, "Noise Power: %.3f", 1))
+			{
+				filter.setData(cardiocycle.getSignal());
+				filter.setDataSize(cardiocycle.getSignalDuration());
+				filter.filterAdaptSmoth(windowWidth, h);
+				conf.values.ys = filter.getFilteredData();
+			}
+			break;
+		default:
+			break;
+		}
+		ImGui::End();
 	}
-	if (filter.getFilteredData() != NULL)
-		conf.values.ys = filter.getFilteredData();
-	ImGui::Plot("plot", conf);
-	ImGui::End();
+
 }
 
 void	GUI::update()
