@@ -1,5 +1,5 @@
 {
-    "files.associations": {
+	"files.associations": {
 		"kardiograph.h": "c",
 		"imgui_impl_opengl3.h": "c",
 		"imgui_impl_sdl.h": "c",
@@ -43,6 +43,25 @@
 		"streambuf": "cpp",
 		"cinttypes": "cpp",
 		"typeinfo": "cpp",
-		"iostream": "cpp"
+		"iostream": "cpp",
+		"__bit_reference": "cpp",
+		"__config": "cpp",
+		"__debug": "cpp",
+		"__functional_base": "cpp",
+		"__locale": "cpp",
+		"__mutex_base": "cpp",
+		"__nullptr": "cpp",
+		"__string": "cpp",
+		"__threading_support": "cpp",
+		"__tuple": "cpp",
+		"bitset": "cpp",
+		"chrono": "cpp",
+		"ctime": "cpp",
+		"functional": "cpp",
+		"ios": "cpp",
+		"iterator": "cpp",
+		"locale": "cpp",
+		"mutex": "cpp",
+		"ratio": "cpp"
 	}
 }

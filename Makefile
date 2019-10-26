@@ -12,7 +12,7 @@
 #
 
 CXX = g++ -std=c++11
-# CXX = clang++
+# CXX = clang++ -std=c++11
 
 IMPL_DIR = imgui_impl/
 IMGUI_DIR = imgui/
@@ -41,12 +41,12 @@ LIBS =
 ##---------------------------------------------------------------------
 
 ## Using OpenGL loader: gl3w [default]
-# SOURCES += imgui/libs/gl3w/GL/gl3w.c
-# CXXFLAGS += -Iimgui/libs/gl3w
+SOURCES += imgui/libs/gl3w/GL/gl3w.c
+CXXFLAGS += -Iimgui/libs/gl3w
 
 ## Using OpenGL loader: glew
 # (This assumes a system-wide installation)
-CXXFLAGS += -lGLEW -DIMGUI_IMPL_OPENGL_LOADER_GLEW
+# CXXFLAGS += -lGLEW -DIMGUI_IMPL_OPENGL_LOADER_GLEW
 
 ## Using OpenGL loader: glad
 # SOURCES += imgui/libs/glad/src/glad.c

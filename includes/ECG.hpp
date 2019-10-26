@@ -15,12 +15,6 @@ enum	e_wave_type
 class ECG
 {
 private:
-	Wave	P;
-	Wave	Q;
-	Wave	R;
-	Wave	S;
-	Wave	T;
-
 	int		Fh;
 	int		t;
 	float	minAmpl;
@@ -30,6 +24,11 @@ private:
 	int		counts;
 	int		cycleAmount;
 	float	noisePower;
+	Wave	P;
+	Wave	Q;
+	Wave	R;
+	Wave	S;
+	Wave	T;
 public:
 	ECG(/* args */);
 	void	generateSignal();

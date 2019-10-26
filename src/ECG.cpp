@@ -3,10 +3,10 @@
 #include <math.h>
 ECG::ECG()
 	: Fh(60)
-	, cycleAmount(10)
 	, t(60 * 1000 / Fh)
 	, minAmpl(-3)
 	, maxAmpl(10)
+	, cycleAmount(10)
 	, noisePower(0)
 	, P("P", 1, 0, 14, 14)
 	, Q("Q", -1.4, 0, 10, 10)

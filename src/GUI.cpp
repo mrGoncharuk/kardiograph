@@ -62,8 +62,8 @@ GUI::GUI(/* args */): clearColor(0.45f, 0.55f, 0.60f, 1.00f), running(true), sho
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
     // Setup Dear ImGui style
-    // ImGui::StyleColorsDark();
-    ImGui::StyleColorsClassic();
+    ImGui::StyleColorsDark();
+    // ImGui::StyleColorsClassic();
 
     // Setup Platform/Renderer bindings
     ImGui_ImplSDL2_InitForOpenGL(window, glContext);
@@ -163,6 +163,10 @@ void	GUI::drawECG()
 
 	if (showFilterWindow)
 	{
+		static int			windowWidth = 10;
+		static const int	maxWindowWidth = 100;
+		static float		h = 0.3;
+
 		ImGui::Begin("Filter", &showFilterWindow);
 		if (filter.getFilteredData() != NULL)
 			conf.values.ys = filter.getFilteredData();
@@ -184,9 +188,8 @@ void	GUI::drawECG()
 			break;
 		case FILTER_SLIDING_MEAN:
 
-			static int windowWidth = 10;
 
-			if (ImGui::SliderInt("Window Width", &windowWidth, 1, 100, "%d"))
+			if (ImGui::SliderInt("Window Width", &windowWidth, 1, maxWindowWidth, "%d"))
 			{
 				filter.setData(cardiocycle.getSignal());
 				filter.setDataSize(cardiocycle.getSignalDuration());
@@ -203,9 +206,8 @@ void	GUI::drawECG()
 			}
 			break;
 		case FILTER_ADAPT_SMOTH:
-			static int		maxWindowWidth;
-			static float	h;
-			if (ImGui::SliderInt("Window Width", &windowWidth, 1, 100, "Window width: %d"))
+
+			if (ImGui::SliderInt("Window Width", &windowWidth, 1, maxWindowWidth, "Window width: %d"))
 			{
 				filter.setData(cardiocycle.getSignal());
 				filter.setDataSize(cardiocycle.getSignalDuration());
@@ -246,8 +248,6 @@ void	GUI::update()
     if (ImGui::ShowStyleSelector("Styles Selector"))
         ref_saved_style = style;
     ImGui::ColorEdit3("Skin", (float*)&clearColor);
-    // static float ampl = 0;
-    static float t = 0;
     if (ImGui::SliderFloat("Amplitude", &getCurrentWave(rbValue).getAmplitude(), cardiocycle.getMinAmpl(), cardiocycle.getMaxAmpl(), "%.3f", 1.0f))
 		cardiocycle.calcEtalon();
     if (ImGui::SliderFloat("Time", &getCurrentWave(rbValue).getTExtreme(), 0, cardiocycle.getEtalonDuration(), "%.3f", 1.0f))

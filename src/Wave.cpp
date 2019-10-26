@@ -8,10 +8,10 @@ Wave::Wave(/* args */)
 
 Wave::Wave(std::string p_label, float p_ampl, float p_textreme, float p_b1, float p_b2)
 		: label(p_label)
-		, amplitude(p_ampl)
 		, tExtreme(p_textreme)
 		, b1(p_b1)
 		, b2(p_b2)
+		, amplitude(p_ampl)
 		, alternation(0)
 		, isAltered(false)
 {

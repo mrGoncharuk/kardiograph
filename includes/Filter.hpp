@@ -29,6 +29,7 @@ public:
 	void	filterExpSmooth(float alpha);
 	void	filterAdaptSmoth(const size_t windowWidth, float noisePower);
 	inline bool	isOverSmoothed(float raw, float filtered, float noisePower);
+	void	smoothWindowWidth(int *windowWidthArray, size_t size);
 	void	prepareFilteredData();
 	Filter();
 	Filter(Filter const &cpy);
