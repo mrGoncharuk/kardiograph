@@ -17,6 +17,7 @@ KardioGraph was developed in science purpose to research and process human elect
 ## Screenshots
 
 ![Screenshot from 2019-11-28 14-58-47](https://user-images.githubusercontent.com/28892426/69809440-6e639800-11f2-11ea-9ee7-f74f7c6b37f6.png "Etalon cardiocycle generator")
+Etalon cardiocycle generator
 
 ![Screenshot from 2019-11-28 14-59-02](https://user-images.githubusercontent.com/28892426/69809501-8cc99380-11f2-11ea-9958-ac77aea0d4b8.png)
 Generated ECG
